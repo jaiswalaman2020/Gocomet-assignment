@@ -38,6 +38,60 @@ function formatDate(value) {
   return new Date(value).toLocaleString();
 }
 
+function getAuctionStatus(auction, now = new Date()) {
+  const forcedClose = new Date(auction.forcedBidCloseAt);
+  const currentClose = new Date(auction.currentBidCloseAt);
+  const bidStart = new Date(auction.bidStartAt);
+
+  if (now >= forcedClose) return "FORCE_CLOSED";
+  if (now >= currentClose) return "CLOSED";
+  if (now < bidStart) return "SCHEDULED";
+  return "ACTIVE";
+}
+
+function formatDuration(ms) {
+  const safeMs = Math.max(0, ms);
+  const totalSeconds = Math.floor(safeMs / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+  return `${minutes}m ${seconds}s`;
+}
+
+function getCountdown(auction, now = new Date()) {
+  const status = getAuctionStatus(auction, now);
+
+  if (status === "SCHEDULED") {
+    return {
+      label: "Starts in",
+      value: formatDuration(new Date(auction.bidStartAt).getTime() - now.getTime())
+    };
+  }
+
+  if (status === "ACTIVE") {
+    return {
+      label: "Time left",
+      value: formatDuration(new Date(auction.currentBidCloseAt).getTime() - now.getTime())
+    };
+  }
+
+  if (status === "CLOSED") {
+    return {
+      label: "Forced close in",
+      value: formatDuration(new Date(auction.forcedBidCloseAt).getTime() - now.getTime())
+    };
+  }
+
+  return {
+    label: "Auction",
+    value: "Force closed"
+  };
+}
+
 function statusClass(status) {
   return status.toLowerCase().replace("_", "-");
 }
@@ -155,6 +209,8 @@ function AuctionForm({ onCreated, onToast }) {
 }
 
 function AuctionList({ auctions, selectedAuctionId, connectionState, onSelect, onRefresh }) {
+  const now = useNow();
+
   return (
     <section className="panel list-panel">
       <div className="section-head">
@@ -171,20 +227,7 @@ function AuctionList({ auctions, selectedAuctionId, connectionState, onSelect, o
           <div className="empty-state">No British auctions yet.</div>
         ) : (
           auctions.map((auction) => (
-            <button
-              className={`auction-row ${auction.id === selectedAuctionId ? "selected" : ""}`}
-              key={auction.id}
-              onClick={() => onSelect(auction.id)}
-            >
-              <span>
-                <strong>{auction.name}</strong>
-                <small>{auction.referenceId}</small>
-              </span>
-              <span>{auction.currentLowestBid ? money.format(auction.currentLowestBid) : "No bids"}</span>
-              <span>{formatDate(auction.currentBidCloseAt)}</span>
-              <span>{formatDate(auction.forcedBidCloseAt)}</span>
-              <mark className={statusClass(auction.status)}>{auction.status.replace("_", " ")}</mark>
-            </button>
+            <AuctionRow auction={auction} isSelected={auction.id === selectedAuctionId} key={auction.id} now={now} onSelect={onSelect} />
           ))
         )}
       </div>
@@ -192,8 +235,33 @@ function AuctionList({ auctions, selectedAuctionId, connectionState, onSelect, o
   );
 }
 
-function BidForm({ auctionId, onBidSubmitted, onToast }) {
+function AuctionRow({ auction, isSelected, now, onSelect }) {
+  const status = getAuctionStatus(auction, now);
+  const countdown = getCountdown(auction, now);
+
+  return (
+    <button className={`auction-row ${isSelected ? "selected" : ""}`} onClick={() => onSelect(auction.id)}>
+      <span>
+        <strong>{auction.name}</strong>
+        <small>{auction.referenceId}</small>
+      </span>
+      <span>{auction.currentLowestBid ? money.format(auction.currentLowestBid) : "No bids"}</span>
+      <span>
+        <strong>{countdown.value}</strong>
+        <small>{countdown.label}</small>
+      </span>
+      <span>
+        <strong>{formatDate(auction.currentBidCloseAt)}</strong>
+        <small>Current close</small>
+      </span>
+      <mark className={statusClass(status)}>{status.replace("_", " ")}</mark>
+    </button>
+  );
+}
+
+function BidForm({ auction, onBidSubmitted, onToast }) {
   const [form, setForm] = useState(initialBidForm);
+  const isActive = auction.status === "ACTIVE";
 
   function updateField(event) {
     const { name, value } = event.target;
@@ -204,7 +272,7 @@ function BidForm({ auctionId, onBidSubmitted, onToast }) {
     event.preventDefault();
 
     try {
-      const result = await api(`/rfqs/${auctionId}/bids`, {
+      const result = await api(`/rfqs/${auction.id}/bids`, {
         method: "POST",
         body: JSON.stringify({
           ...form,
@@ -223,29 +291,31 @@ function BidForm({ auctionId, onBidSubmitted, onToast }) {
     <form className="bid-form" onSubmit={submitBid}>
       <label>
         Carrier
-        <input name="carrierName" value={form.carrierName} onChange={updateField} required placeholder="Carrier A" />
+        <input name="carrierName" value={form.carrierName} onChange={updateField} required disabled={!isActive} placeholder="Carrier A" />
       </label>
       <label>
         Freight
-        <input name="freightCharges" type="number" min="0" step="0.01" value={form.freightCharges} onChange={updateField} required />
+        <input name="freightCharges" type="number" min="0" step="0.01" value={form.freightCharges} onChange={updateField} required disabled={!isActive} />
       </label>
       <label>
         Origin
-        <input name="originCharges" type="number" min="0" step="0.01" value={form.originCharges} onChange={updateField} required />
+        <input name="originCharges" type="number" min="0" step="0.01" value={form.originCharges} onChange={updateField} required disabled={!isActive} />
       </label>
       <label>
         Destination
-        <input name="destinationCharges" type="number" min="0" step="0.01" value={form.destinationCharges} onChange={updateField} required />
+        <input name="destinationCharges" type="number" min="0" step="0.01" value={form.destinationCharges} onChange={updateField} required disabled={!isActive} />
       </label>
       <label>
         Transit Days
-        <input name="transitTimeDays" type="number" min="1" value={form.transitTimeDays} onChange={updateField} required />
+        <input name="transitTimeDays" type="number" min="1" value={form.transitTimeDays} onChange={updateField} required disabled={!isActive} />
       </label>
       <label>
         Quote Validity
-        <input name="quoteValidityAt" type="datetime-local" value={form.quoteValidityAt} onChange={updateField} required />
+        <input name="quoteValidityAt" type="datetime-local" value={form.quoteValidityAt} onChange={updateField} required disabled={!isActive} />
       </label>
-      <button type="submit">Submit Bid</button>
+      <button type="submit" disabled={!isActive}>
+        {isActive ? "Submit Bid" : "Bidding Closed"}
+      </button>
     </form>
   );
 }
@@ -302,6 +372,8 @@ function ActivityLog({ logs }) {
 }
 
 function AuctionDetail({ auction, onBidSubmitted, onToast }) {
+  const now = useNow();
+
   if (!auction) {
     return (
       <section className="panel detail-panel">
@@ -310,6 +382,10 @@ function AuctionDetail({ auction, onBidSubmitted, onToast }) {
     );
   }
 
+  const status = getAuctionStatus(auction, now);
+  const liveAuction = { ...auction, status };
+  const countdown = getCountdown(liveAuction, now);
+
   return (
     <section className="panel detail-panel">
       <div className="detail-header">
@@ -317,9 +393,13 @@ function AuctionDetail({ auction, onBidSubmitted, onToast }) {
           <p className="eyebrow">{auction.referenceId}</p>
           <h2>{auction.name}</h2>
         </div>
-        <mark className={statusClass(auction.status)}>{auction.status.replace("_", " ")}</mark>
+        <mark className={statusClass(status)}>{status.replace("_", " ")}</mark>
       </div>
       <div className="metrics">
+        <div>
+          <small>{countdown.label}</small>
+          <strong>{countdown.value}</strong>
+        </div>
         <div>
           <small>Current Close</small>
           <strong>{formatDate(auction.currentBidCloseAt)}</strong>
@@ -339,13 +419,24 @@ function AuctionDetail({ auction, onBidSubmitted, onToast }) {
       </div>
       <div className="config-line">Trigger: {auction.extensionTrigger.replaceAll("_", " ")}</div>
       <h3>Submit Quote</h3>
-      <BidForm auctionId={auction.id} onBidSubmitted={onBidSubmitted} onToast={onToast} />
+      <BidForm auction={liveAuction} onBidSubmitted={onBidSubmitted} onToast={onToast} />
       <h3>Supplier Ranking</h3>
       <BidsTable bids={auction.bids} />
       <h3>Activity Log</h3>
       <ActivityLog logs={auction.activityLogs} />
     </section>
   );
+}
+
+function useNow() {
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  return now;
 }
 
 function App() {
