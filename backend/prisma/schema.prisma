@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AuctionExtensionTrigger {
+  BID_RECEIVED
+  ANY_RANK_CHANGE
+  L1_RANK_CHANGE
+}
+
+model Rfq {
+  id                       String                  @id @default(cuid())
+  name                     String
+  referenceId              String                  @unique
+  bidStartAt               DateTime
+  initialBidCloseAt        DateTime
+  currentBidCloseAt        DateTime
+  forcedBidCloseAt         DateTime
+  pickupServiceAt          DateTime
+  triggerWindowMinutes     Int
+  extensionDurationMinutes Int
+  extensionTrigger         AuctionExtensionTrigger
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+  bids                     Bid[]
+  activityLogs             ActivityLog[]
+
+  @@index([currentBidCloseAt])
+  @@index([forcedBidCloseAt])
+}
+
+model Bid {
+  id                 String   @id @default(cuid())
+  rfqId              String
+  carrierName        String
+  freightCharges     Decimal  @db.Decimal(12, 2)
+  originCharges      Decimal  @db.Decimal(12, 2)
+  destinationCharges Decimal  @db.Decimal(12, 2)
+  totalAmount        Decimal  @db.Decimal(12, 2)
+  transitTimeDays    Int
+  quoteValidityAt    DateTime
+  createdAt          DateTime @default(now())
+  rfq                Rfq      @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+
+  @@index([rfqId, totalAmount])
+  @@index([carrierName])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  rfqId     String
+  type      String
+  message   String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  rfq       Rfq      @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+
+  @@index([rfqId, createdAt])
+}

@@ -1,0 +1,312 @@
+:root {
+  color-scheme: light;
+  --ink: #16201f;
+  --muted: #65706d;
+  --line: #dce4df;
+  --panel: #ffffff;
+  --page: #eef4f1;
+  --accent: #0f766e;
+  --accent-strong: #0b4f4a;
+  --warning: #9a5b00;
+  --danger: #b42318;
+  --success: #1f7a3f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--page);
+  color: var(--ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--line);
+  background: #fbfdfc;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(1.5rem, 3vw, 2.4rem);
+}
+
+h2 {
+  font-size: 1.15rem;
+}
+
+h3 {
+  margin-top: 24px;
+  margin-bottom: 12px;
+  font-size: 1rem;
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(360px, 1fr);
+  gap: 20px;
+  padding: 24px 32px 40px;
+}
+
+.panel {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 18px;
+}
+
+.detail-panel {
+  grid-column: 1 / -1;
+}
+
+.stack,
+.bid-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 650;
+}
+
+input,
+select {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid #c7d2cc;
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: #fff;
+  color: var(--ink);
+}
+
+button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 750;
+}
+
+button:hover {
+  background: var(--accent-strong);
+}
+
+.icon-button {
+  min-width: 96px;
+}
+
+.inline-fields,
+.bid-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.bid-form button {
+  align-self: end;
+}
+
+.section-head,
+.detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.auction-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.auction-row {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr 1fr 1fr auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  min-height: 72px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  padding: 12px;
+  text-align: left;
+}
+
+.auction-row:hover,
+.auction-row.selected {
+  border-color: var(--accent);
+  background: #effbf8;
+}
+
+small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+mark,
+.status-dot {
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: #e7f6ed;
+  color: var(--success);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.closed {
+  background: #fff5dc;
+  color: var(--warning);
+}
+
+.force-closed,
+.offline {
+  background: #fee4e2;
+  color: var(--danger);
+}
+
+.scheduled {
+  background: #e5f0ff;
+  color: #175cd3;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0 12px;
+}
+
+.metrics div {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fbfdfc;
+}
+
+.metrics strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.9rem;
+}
+
+.config-line {
+  color: var(--muted);
+  font-weight: 650;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #fff;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--line);
+  padding: 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: #f6faf8;
+  color: var(--muted);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+}
+
+.activity-log {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.activity-log li,
+.empty-state {
+  border: 1px dashed #c7d2cc;
+  border-radius: 8px;
+  padding: 14px;
+  background: #fbfdfc;
+}
+
+.activity-log span {
+  display: block;
+  margin: 4px 0;
+}
+
+.toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  max-width: min(420px, calc(100vw - 48px));
+  border-radius: 8px;
+  background: var(--ink);
+  color: #fff;
+  padding: 12px 14px;
+  box-shadow: 0 14px 40px rgba(22, 32, 31, 0.18);
+}
+
+.toast.error {
+  background: var(--danger);
+}
+
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .auction-row,
+  .metrics,
+  .inline-fields,
+  .bid-form {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 20px 18px;
+  }
+}
