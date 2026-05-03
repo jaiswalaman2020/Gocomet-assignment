@@ -37,12 +37,15 @@ npm install --prefix frontend
 cp backend/.env.example backend/.env
 npm --prefix backend run prisma:generate
 npm --prefix backend run prisma:migrate
+npm run seed
 npm run build
 npm test
 npm run dev
 ```
 
 Open `http://localhost:4000` for the backend-served production build. For frontend development, run `npm run dev:frontend` and open `http://localhost:5173`.
+
+`npm run seed` creates three demo auctions: active, scheduled, and force closed.
 
 ## Render Deployment
 
