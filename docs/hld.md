@@ -16,7 +16,7 @@ flowchart LR
 
 ## Components
 
-- Frontend: Static HTML/CSS/JavaScript served by Express. It supports RFQ creation, auction listing, auction details, supplier bid submission, ranking, and activity viewing.
+- Frontend: React + Vite app served by Express in production. It supports RFQ creation, auction listing, auction details, supplier bid submission, ranking, and activity viewing.
 - API: Express routes under `/api/rfqs` handle auction creation, listing, detail retrieval, and bid submission.
 - Auction Service: Owns validation, rank calculation, trigger evaluation, time extension, forced close capping, and activity logging.
 - Realtime Layer: Socket.io notifies listing and detail pages when bids or extensions change an auction.

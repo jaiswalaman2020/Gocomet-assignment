@@ -4,70 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>British Auction RFQ</title>
-    <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">RFQ Auction Desk</p>
-        <h1>British Auction Control</h1>
-      </div>
-      <button id="refreshButton" class="icon-button" title="Refresh auctions">Refresh</button>
-    </header>
-
-    <main class="layout">
-      <section class="panel create-panel">
-        <h2>Create RFQ</h2>
-        <form id="auctionForm" class="stack">
-          <label>RFQ Name <input name="name" required placeholder="Mumbai to Dubai Freight" /></label>
-          <label>Reference ID <input name="referenceId" required placeholder="RFQ-2026-001" /></label>
-          <label>Bid Start <input name="bidStartAt" type="datetime-local" required /></label>
-          <label>Bid Close <input name="initialBidCloseAt" type="datetime-local" required /></label>
-          <label>Forced Close <input name="forcedBidCloseAt" type="datetime-local" required /></label>
-          <label>Pickup / Service Date <input name="pickupServiceAt" type="datetime-local" required /></label>
-          <div class="inline-fields">
-            <label>Trigger Window <input name="triggerWindowMinutes" type="number" min="1" value="10" required /></label>
-            <label>Extension <input name="extensionDurationMinutes" type="number" min="1" value="5" required /></label>
-          </div>
-          <label>
-            Extension Trigger
-            <select name="extensionTrigger" required>
-              <option value="BID_RECEIVED">Bid received in last X minutes</option>
-              <option value="ANY_RANK_CHANGE">Any supplier rank change</option>
-              <option value="L1_RANK_CHANGE">Lowest bidder rank change</option>
-            </select>
-          </label>
-          <button type="submit">Create Auction</button>
-        </form>
-      </section>
-
-      <section class="panel list-panel">
-        <div class="section-head">
-          <h2>Auctions</h2>
-          <span id="connectionState" class="status-dot">Live</span>
-        </div>
-        <div id="auctionList" class="auction-list"></div>
-      </section>
-
-      <section class="panel detail-panel">
-        <div id="auctionDetail" class="empty-state">Select an auction to view bids and activity.</div>
-      </section>
-    </main>
-
-    <template id="bidFormTemplate">
-      <form id="bidForm" class="bid-form">
-        <label>Carrier <input name="carrierName" required placeholder="Carrier A" /></label>
-        <label>Freight <input name="freightCharges" type="number" min="0" step="0.01" required /></label>
-        <label>Origin <input name="originCharges" type="number" min="0" step="0.01" required /></label>
-        <label>Destination <input name="destinationCharges" type="number" min="0" step="0.01" required /></label>
-        <label>Transit Days <input name="transitTimeDays" type="number" min="1" required /></label>
-        <label>Quote Validity <input name="quoteValidityAt" type="datetime-local" required /></label>
-        <button type="submit">Submit Bid</button>
-      </form>
-    </template>
-
-    <div id="toast" class="toast" hidden></div>
-    <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="/src/main.js"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

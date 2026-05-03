@@ -8,7 +8,7 @@ A simplified RFQ application with British Auction bidding rules, automatic close
 - ORM: Prisma
 - Database: Neon Postgres
 - Realtime: Socket.io
-- Frontend: Static HTML/CSS/JavaScript served by Express
+- Frontend: React + Vite served by Express in production
 - Hosting target: Render
 
 ## Project Structure
@@ -22,7 +22,7 @@ backend/
     services/auctionService.js
 frontend/
   index.html
-  src/main.js
+  src/main.jsx
   src/styles.css
 docs/
   hld.md
@@ -33,13 +33,15 @@ docs/
 
 ```bash
 npm install --prefix backend
+npm install --prefix frontend
 cp backend/.env.example backend/.env
 npm --prefix backend run prisma:generate
 npm --prefix backend run prisma:migrate
+npm run build
 npm run dev
 ```
 
-Open `http://localhost:4000`.
+Open `http://localhost:4000` for the backend-served production build. For frontend development, run `npm run dev:frontend` and open `http://localhost:5173`.
 
 ## Environment Variables
 

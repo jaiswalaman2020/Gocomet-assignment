@@ -27,7 +27,7 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/rfqs", rfqRouter);
 
-const frontendPath = path.join(__dirname, "../../frontend");
+const frontendPath = path.join(__dirname, "../../frontend/dist");
 app.use(express.static(frontendPath));
 app.get("*", (_req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));

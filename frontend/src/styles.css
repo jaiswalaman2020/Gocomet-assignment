@@ -148,6 +148,12 @@ button:hover {
   gap: 16px;
 }
 
+.list-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .auction-list {
   display: grid;
   gap: 8px;
