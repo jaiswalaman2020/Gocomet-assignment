@@ -141,8 +141,10 @@ function getSupplierRanking(bids) {
     }));
 }
 
+const apiBaseUrl = import.meta.env.VITE_API_URL || "/api";
+
 async function api(path, options = {}) {
-  const response = await fetch(`/api${path}`, {
+  const response = await fetch(`${apiBaseUrl}${path}`, {
     headers: { "Content-Type": "application/json" },
     ...options,
   });
