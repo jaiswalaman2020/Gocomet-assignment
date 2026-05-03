@@ -14,6 +14,18 @@ export function toMoney(value) {
   return numberValue.toFixed(2);
 }
 
+function parseDate(value, fieldName) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    const error = new Error(`${fieldName} must be a valid date.`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return date;
+}
+
 export function getAuctionStatus(rfq, now = new Date()) {
   if (now >= rfq.forcedBidCloseAt) return "FORCE_CLOSED";
   if (now >= rfq.currentBidCloseAt) return "CLOSED";
@@ -61,10 +73,10 @@ export async function getAuctionDetails(id) {
 }
 
 export async function createAuction(data) {
-  const bidStartAt = new Date(data.bidStartAt);
-  const initialBidCloseAt = new Date(data.initialBidCloseAt);
-  const forcedBidCloseAt = new Date(data.forcedBidCloseAt);
-  const pickupServiceAt = new Date(data.pickupServiceAt);
+  const bidStartAt = parseDate(data.bidStartAt, "Bid start time");
+  const initialBidCloseAt = parseDate(data.initialBidCloseAt, "Bid close time");
+  const forcedBidCloseAt = parseDate(data.forcedBidCloseAt, "Forced bid close time");
+  const pickupServiceAt = parseDate(data.pickupServiceAt, "Pickup / service date");
 
   if (forcedBidCloseAt <= initialBidCloseAt) {
     const error = new Error("Forced bid close time must be greater than bid close time.");
@@ -105,7 +117,7 @@ export async function createAuction(data) {
   });
 }
 
-function getCarrierRanks(bids) {
+export function getCarrierRanks(bids) {
   const bestByCarrier = new Map();
 
   for (const bid of bids) {
@@ -120,7 +132,7 @@ function getCarrierRanks(bids) {
     .map((bid) => bid.carrierName);
 }
 
-function shouldExtendAuction({ rfq, previousRanks, nextRanks, submittedAt }) {
+export function shouldExtendAuction({ rfq, previousRanks, nextRanks, submittedAt }) {
   const windowStart = new Date(rfq.currentBidCloseAt.getTime() - rfq.triggerWindowMinutes * 60_000);
   const inTriggerWindow = submittedAt >= windowStart && submittedAt <= rfq.currentBidCloseAt;
 
@@ -190,7 +202,7 @@ export async function submitBid(rfqId, data) {
         destinationCharges,
         totalAmount,
         transitTimeDays: data.transitTimeDays,
-        quoteValidityAt: new Date(data.quoteValidityAt)
+        quoteValidityAt: parseDate(data.quoteValidityAt, "Quote validity")
       }
     });
 

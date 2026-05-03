@@ -10,8 +10,8 @@ import {
 const router = Router();
 
 const auctionSchema = z.object({
-  name: z.string().min(2),
-  referenceId: z.string().min(2),
+  name: z.string().trim().min(2),
+  referenceId: z.string().trim().min(2),
   bidStartAt: z.string().datetime(),
   initialBidCloseAt: z.string().datetime(),
   forcedBidCloseAt: z.string().datetime(),
@@ -22,7 +22,7 @@ const auctionSchema = z.object({
 });
 
 const bidSchema = z.object({
-  carrierName: z.string().min(2),
+  carrierName: z.string().trim().min(2),
   freightCharges: z.coerce.number().nonnegative(),
   originCharges: z.coerce.number().nonnegative(),
   destinationCharges: z.coerce.number().nonnegative(),

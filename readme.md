@@ -38,6 +38,7 @@ cp backend/.env.example backend/.env
 npm --prefix backend run prisma:generate
 npm --prefix backend run prisma:migrate
 npm run build
+npm test
 npm run dev
 ```
 

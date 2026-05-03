@@ -59,6 +59,12 @@ app.use((error, _req, res, _next) => {
     return res.status(400).json({ message: "Validation failed.", issues: error.issues });
   }
 
+  if (error.code === "P2002") {
+    return res.status(409).json({
+      message: `A record with this ${error.meta?.target?.join(", ") || "unique field"} already exists.`
+    });
+  }
+
   const statusCode = error.statusCode || 500;
   res.status(statusCode).json({
     message: error.message || "Something went wrong."
