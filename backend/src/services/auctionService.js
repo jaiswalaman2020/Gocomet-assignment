@@ -3,7 +3,7 @@ import { prisma } from "../lib/prisma.js";
 const TRIGGERS = {
   BID_RECEIVED: "BID_RECEIVED",
   ANY_RANK_CHANGE: "ANY_RANK_CHANGE",
-  L1_RANK_CHANGE: "L1_RANK_CHANGE"
+  L1_RANK_CHANGE: "L1_RANK_CHANGE",
 };
 
 export function toMoney(value) {
@@ -38,16 +38,16 @@ export async function listAuctions() {
     include: {
       bids: {
         orderBy: [{ totalAmount: "asc" }, { createdAt: "asc" }],
-        take: 1
-      }
+        take: 1,
+      },
     },
-    orderBy: { createdAt: "desc" }
+    orderBy: { createdAt: "desc" },
   });
 
   return rfqs.map((rfq) => ({
     ...rfq,
     status: getAuctionStatus(rfq),
-    currentLowestBid: rfq.bids[0]?.totalAmount ?? null
+    currentLowestBid: rfq.bids[0]?.totalAmount ?? null,
   }));
 }
 
@@ -56,8 +56,8 @@ export async function getAuctionDetails(id) {
     where: { id },
     include: {
       bids: { orderBy: [{ totalAmount: "asc" }, { createdAt: "asc" }] },
-      activityLogs: { orderBy: { createdAt: "desc" } }
-    }
+      activityLogs: { orderBy: { createdAt: "desc" } },
+    },
   });
 
   if (!rfq) return null;
@@ -67,25 +67,35 @@ export async function getAuctionDetails(id) {
     status: getAuctionStatus(rfq),
     bids: rfq.bids.map((bid, index) => ({
       ...bid,
-      rank: `L${index + 1}`
-    }))
+      rank: `L${index + 1}`,
+    })),
   };
 }
 
 export async function createAuction(data) {
   const bidStartAt = parseDate(data.bidStartAt, "Bid start time");
   const initialBidCloseAt = parseDate(data.initialBidCloseAt, "Bid close time");
-  const forcedBidCloseAt = parseDate(data.forcedBidCloseAt, "Forced bid close time");
-  const pickupServiceAt = parseDate(data.pickupServiceAt, "Pickup / service date");
+  const forcedBidCloseAt = parseDate(
+    data.forcedBidCloseAt,
+    "Forced bid close time",
+  );
+  const pickupServiceAt = parseDate(
+    data.pickupServiceAt,
+    "Pickup / service date",
+  );
 
   if (forcedBidCloseAt <= initialBidCloseAt) {
-    const error = new Error("Forced bid close time must be greater than bid close time.");
+    const error = new Error(
+      "Forced bid close time must be greater than bid close time.",
+    );
     error.statusCode = 400;
     throw error;
   }
 
   if (initialBidCloseAt <= bidStartAt) {
-    const error = new Error("Bid close time must be greater than bid start time.");
+    const error = new Error(
+      "Bid close time must be greater than bid start time.",
+    );
     error.statusCode = 400;
     throw error;
   }
@@ -109,11 +119,11 @@ export async function createAuction(data) {
           metadata: {
             triggerWindowMinutes: data.triggerWindowMinutes,
             extensionDurationMinutes: data.extensionDurationMinutes,
-            extensionTrigger: data.extensionTrigger
-          }
-        }
-      }
-    }
+            extensionTrigger: data.extensionTrigger,
+          },
+        },
+      },
+    },
   });
 }
 
@@ -128,13 +138,25 @@ export function getCarrierRanks(bids) {
   }
 
   return [...bestByCarrier.values()]
-    .sort((a, b) => Number(a.totalAmount) - Number(b.totalAmount) || a.createdAt - b.createdAt)
+    .sort(
+      (a, b) =>
+        Number(a.totalAmount) - Number(b.totalAmount) ||
+        a.createdAt - b.createdAt,
+    )
     .map((bid) => bid.carrierName);
 }
 
-export function shouldExtendAuction({ rfq, previousRanks, nextRanks, submittedAt }) {
-  const windowStart = new Date(rfq.currentBidCloseAt.getTime() - rfq.triggerWindowMinutes * 60_000);
-  const inTriggerWindow = submittedAt >= windowStart && submittedAt <= rfq.currentBidCloseAt;
+export function shouldExtendAuction({
+  rfq,
+  previousRanks,
+  nextRanks,
+  submittedAt,
+}) {
+  const windowStart = new Date(
+    rfq.currentBidCloseAt.getTime() - rfq.triggerWindowMinutes * 60_000,
+  );
+  const inTriggerWindow =
+    submittedAt >= windowStart && submittedAt <= rfq.currentBidCloseAt;
 
   if (!inTriggerWindow) {
     return { shouldExtend: false, reason: null };
@@ -148,7 +170,9 @@ export function shouldExtendAuction({ rfq, previousRanks, nextRanks, submittedAt
     const rankChanged = previousRanks.join("|") !== nextRanks.join("|");
     return {
       shouldExtend: rankChanged,
-      reason: rankChanged ? "Supplier ranking changed in trigger window." : null
+      reason: rankChanged
+        ? "Supplier ranking changed in trigger window."
+        : null,
     };
   }
 
@@ -157,7 +181,7 @@ export function shouldExtendAuction({ rfq, previousRanks, nextRanks, submittedAt
   const l1Changed = previousL1 !== nextL1;
   return {
     shouldExtend: l1Changed,
-    reason: l1Changed ? "Lowest bidder changed in trigger window." : null
+    reason: l1Changed ? "Lowest bidder changed in trigger window." : null,
   };
 }
 
@@ -167,7 +191,7 @@ export async function submitBid(rfqId, data) {
   return prisma.$transaction(async (tx) => {
     const rfq = await tx.rfq.findUnique({
       where: { id: rfqId },
-      include: { bids: true }
+      include: { bids: true },
     });
 
     if (!rfq) {
@@ -178,7 +202,9 @@ export async function submitBid(rfqId, data) {
 
     const status = getAuctionStatus(rfq, submittedAt);
     if (status !== "ACTIVE") {
-      const error = new Error(`Auction is ${status.toLowerCase().replace("_", " ")}.`);
+      const error = new Error(
+        `Auction is ${status.toLowerCase().replace("_", " ")}.`,
+      );
       error.statusCode = 400;
       throw error;
     }
@@ -202,8 +228,8 @@ export async function submitBid(rfqId, data) {
         destinationCharges,
         totalAmount,
         transitTimeDays: data.transitTimeDays,
-        quoteValidityAt: parseDate(data.quoteValidityAt, "Quote validity")
-      }
+        quoteValidityAt: parseDate(data.quoteValidityAt, "Quote validity"),
+      },
     });
 
     await tx.activityLog.create({
@@ -211,31 +237,39 @@ export async function submitBid(rfqId, data) {
         rfqId,
         type: "BID_SUBMITTED",
         message: `${data.carrierName} submitted a bid of ${totalAmount}.`,
-        metadata: { bidId: bid.id, totalAmount }
-      }
+        metadata: { bidId: bid.id, totalAmount },
+      },
     });
 
     const nextRanks = getCarrierRanks([...rfq.bids, bid]);
-    const extensionDecision = shouldExtendAuction({ rfq, previousRanks, nextRanks, submittedAt });
+    const extensionDecision = shouldExtendAuction({
+      rfq,
+      previousRanks,
+      nextRanks,
+      submittedAt,
+    });
     let updatedRfq = rfq;
     let extension = null;
 
     if (extensionDecision.shouldExtend) {
       const requestedClose = new Date(
-        rfq.currentBidCloseAt.getTime() + rfq.extensionDurationMinutes * 60_000
+        rfq.currentBidCloseAt.getTime() + rfq.extensionDurationMinutes * 60_000,
       );
-      const newClose = requestedClose > rfq.forcedBidCloseAt ? rfq.forcedBidCloseAt : requestedClose;
+      const newClose =
+        requestedClose > rfq.forcedBidCloseAt
+          ? rfq.forcedBidCloseAt
+          : requestedClose;
 
       if (newClose > rfq.currentBidCloseAt) {
         updatedRfq = await tx.rfq.update({
           where: { id: rfqId },
-          data: { currentBidCloseAt: newClose }
+          data: { currentBidCloseAt: newClose },
         });
 
         extension = {
           previousClose: rfq.currentBidCloseAt,
           newClose,
-          reason: extensionDecision.reason
+          reason: extensionDecision.reason,
         };
 
         await tx.activityLog.create({
@@ -246,9 +280,23 @@ export async function submitBid(rfqId, data) {
             metadata: {
               reason: extensionDecision.reason,
               previousClose: rfq.currentBidCloseAt,
-              newClose
-            }
-          }
+              newClose,
+            },
+          },
+        });
+      } else {
+        await tx.activityLog.create({
+          data: {
+            rfqId,
+            type: "TIME_EXTENSION_SKIPPED",
+            message: "Auction extension blocked by forced close cap.",
+            metadata: {
+              reason: "Forced bid close cap reached.",
+              previousClose: rfq.currentBidCloseAt,
+              attemptedClose: requestedClose,
+              forcedClose: rfq.forcedBidCloseAt,
+            },
+          },
         });
       }
     }
