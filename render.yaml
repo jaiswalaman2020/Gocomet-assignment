@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: british-auction-rfq
+    runtime: node
+    plan: free
+    buildCommand: npm install --prefix backend && npm install --prefix frontend && npm run build && npm --prefix backend run prisma:generate
+    startCommand: npm --prefix backend run prisma:deploy && npm --prefix backend start
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false

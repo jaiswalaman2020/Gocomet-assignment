@@ -39,6 +39,6 @@ flowchart LR
 ## Deployment
 
 - Render Web Service runs the backend with `npm start`.
-- Render build command should install backend dependencies and generate Prisma client.
+- Render build command installs backend and frontend dependencies, builds React, and generates Prisma Client.
 - Neon provides the Postgres `DATABASE_URL`.
 - Prisma migrations are applied with `npm --prefix backend run prisma:deploy`.

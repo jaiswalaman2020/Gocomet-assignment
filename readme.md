@@ -43,6 +43,15 @@ npm run dev
 
 Open `http://localhost:4000` for the backend-served production build. For frontend development, run `npm run dev:frontend` and open `http://localhost:5173`.
 
+## Render Deployment
+
+The repository includes `render.yaml` for a Render web service.
+
+1. Create a Render Blueprint from this repository.
+2. Add `DATABASE_URL` from Neon in Render environment variables.
+3. Set `CORS_ORIGIN` to the deployed Render URL.
+4. Render runs `prisma migrate deploy` before starting the Express server.
+
 ## Environment Variables
 
 ```text

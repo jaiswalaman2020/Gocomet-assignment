@@ -1,5 +1,6 @@
 import "dotenv/config";
 import path from "node:path";
+import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import cors from "cors";
 import express from "express";
@@ -28,10 +29,20 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/rfqs", rfqRouter);
 
 const frontendPath = path.join(__dirname, "../../frontend/dist");
-app.use(express.static(frontendPath));
-app.get("*", (_req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
-});
+const frontendIndexPath = path.join(frontendPath, "index.html");
+
+if (fs.existsSync(frontendIndexPath)) {
+  app.use(express.static(frontendPath));
+  app.get("*", (_req, res) => {
+    res.sendFile(frontendIndexPath);
+  });
+} else {
+  app.get("*", (_req, res) => {
+    res.status(404).json({
+      message: "Frontend build not found. Run `npm run build` before starting the production server."
+    });
+  });
+}
 
 io.on("connection", (socket) => {
   socket.on("auction:join", (rfqId) => {
