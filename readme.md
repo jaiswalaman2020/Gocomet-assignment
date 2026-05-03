@@ -1,3 +1,5 @@
+## Note: The backend is deployed separately as a Render Web Service. Render can spin it down when idle, so the first request after inactivity may take 15-20 seconds to wake up. If the frontend shows an initial loading spinner, wait for the backend to start.
+
 # British Auction RFQ System
 
 A simplified RFQ application with British Auction bidding rules, automatic close-time extension, forced close capping, supplier ranking, and realtime auction updates.
@@ -46,15 +48,6 @@ npm run dev
 Open `http://localhost:4000` for the backend-served production build. For frontend development, run `npm run dev:frontend` and open `http://localhost:5173`.
 
 `npm run seed` creates three demo auctions: active, scheduled, and force closed.
-
-## Render Deployment
-
-The repository includes `render.yaml` for a Render web service.
-
-1. Create a Render Blueprint from this repository.
-2. Add `DATABASE_URL` from Neon in Render environment variables.
-3. Set `CORS_ORIGIN` to the deployed Render URL.
-4. Render runs `prisma migrate deploy` before starting the Express server.
 
 ## Environment Variables
 
