@@ -14,8 +14,8 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN || "*"
-  }
+    origin: process.env.CORS_ORIGIN || "*",
+  },
 });
 
 app.set("io", io);
@@ -39,7 +39,8 @@ if (fs.existsSync(frontendIndexPath)) {
 } else {
   app.get("*", (_req, res) => {
     res.status(404).json({
-      message: "Frontend build not found. Run `npm run build` before starting the production server."
+      message:
+        "Frontend build not found. Run `npm run build` before starting the production server.",
     });
   });
 }
@@ -56,18 +57,20 @@ io.on("connection", (socket) => {
 
 app.use((error, _req, res, _next) => {
   if (error.name === "ZodError") {
-    return res.status(400).json({ message: "Validation failed.", issues: error.issues });
+    return res
+      .status(400)
+      .json({ message: "Validation failed.", issues: error.issues });
   }
 
   if (error.code === "P2002") {
     return res.status(409).json({
-      message: `A record with this ${error.meta?.target?.join(", ") || "unique field"} already exists.`
+      message: `A record with this ${error.meta?.target?.join(", ") || "unique field"} already exists.`,
     });
   }
 
   const statusCode = error.statusCode || 500;
   res.status(statusCode).json({
-    message: error.message || "Something went wrong."
+    message: error.message || "Something went wrong.",
   });
 });
 
