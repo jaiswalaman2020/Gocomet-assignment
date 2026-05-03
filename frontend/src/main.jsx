@@ -1,4 +1,4 @@
-import { StrictMode, useCallback, useEffect, useMemo, useState } from "react";
+import { StrictMode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { io } from "socket.io-client";
 import "./styles.css";
@@ -446,6 +446,7 @@ function App() {
   const [connectionState, setConnectionState] = useState("Live");
   const [toast, setToast] = useState(null);
   const socket = useMemo(() => io(), []);
+  const selectedAuctionIdRef = useRef(null);
 
   const showToast = useCallback((message, isError = false) => {
     setToast({ message, isError });
@@ -474,6 +475,7 @@ function App() {
     async (id) => {
       if (selectedAuctionId) socket.emit("auction:leave", selectedAuctionId);
       setSelectedAuctionId(id);
+      selectedAuctionIdRef.current = id;
       socket.emit("auction:join", id);
       await loadAuctions();
       await loadAuctionDetails(id);
@@ -483,26 +485,48 @@ function App() {
 
   const refreshSelectedAuction = useCallback(async () => {
     await loadAuctions();
-    if (selectedAuctionId) await loadAuctionDetails(selectedAuctionId);
-  }, [loadAuctionDetails, loadAuctions, selectedAuctionId]);
+    if (selectedAuctionIdRef.current) await loadAuctionDetails(selectedAuctionIdRef.current);
+  }, [loadAuctionDetails, loadAuctions]);
 
   useEffect(() => {
     loadAuctions();
   }, [loadAuctions]);
 
   useEffect(() => {
-    socket.on("connect", () => setConnectionState("Live"));
-    socket.on("disconnect", () => setConnectionState("Offline"));
+    selectedAuctionIdRef.current = selectedAuctionId;
+  }, [selectedAuctionId]);
+
+  useEffect(() => {
+    function handleConnect() {
+      setConnectionState("Live");
+      if (selectedAuctionIdRef.current) {
+        socket.emit("auction:join", selectedAuctionIdRef.current);
+      }
+    }
+
+    function handleDisconnect() {
+      setConnectionState("Offline");
+    }
+
+    function handleAuctionUpdated({ rfqId }) {
+      if (rfqId === selectedAuctionIdRef.current) {
+        refreshSelectedAuction();
+      }
+    }
+
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
     socket.on("auction:list-updated", loadAuctions);
-    socket.on("auction:updated", ({ rfqId }) => {
-      if (rfqId === selectedAuctionId) refreshSelectedAuction();
-    });
+    socket.on("auction:updated", handleAuctionUpdated);
 
     return () => {
-      socket.removeAllListeners();
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+      socket.off("auction:list-updated", loadAuctions);
+      socket.off("auction:updated", handleAuctionUpdated);
       socket.close();
     };
-  }, [loadAuctions, refreshSelectedAuction, selectedAuctionId, socket]);
+  }, [loadAuctions, refreshSelectedAuction, socket]);
 
   return (
     <>
